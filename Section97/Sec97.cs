@@ -9,6 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes;
+using Il2CppScheduleOne;
+using Il2CppScheduleOne.Clothing;
 using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Equipping;
 using Il2CppScheduleOne.ItemFramework;
@@ -24,8 +27,11 @@ using Random = System.Random;
 using Il2CppScheduleOne.TV;
 using Il2CppSystem;
 using Action = Il2CppSystem.Action;
+using Array = Il2CppSystem.Array;
 using Console = Il2CppScheduleOne.Console;
+using Enum = Il2CppSystem.Enum;
 using Exception = System.Exception;
+using KeyValuePair = Il2CppSystem.Collections.Generic.KeyValuePair;
 using TimeSpan = System.TimeSpan;
 using Type = System.Type;
 
@@ -80,12 +86,138 @@ namespace Section97
         if (!(sceneName == "Main")) return;
         foreach (GameObject gameObject in Object.FindObjectsOfType<GameObject>())
         {
-            if (((Object)gameObject).name == "cash register")
+            if (gameObject.name == "cash register")
             {
                 Sec97.robbableRegisters.Add(gameObject);
+            } else if (gameObject.name.ToLower().Contains("clothing rack"))
+            {
+                try
+                {
+                    bool Shirt = gameObject.name.EndsWith("shirts");
+                    bool Pants = gameObject.name.EndsWith("pants");
+                    if (Shirt || Pants)
+                    {
+                        Transform child = gameObject.transform.FindChild("clothing rack");
+                        if (child != null)
+                        {
+                            Transform child1 = child.FindChild("Rack");
+                            if (child1 != null)
+                            {
+                                InteractableObject interactable =
+                                    child1.gameObject.AddComponent<InteractableObject>();
+                                interactable.message = Shirt ? "Shoplift Shirt" : "Shoplift Pants";
+                                interactable.MaxInteractionRange = 2.5f;
+                                void funcThatCallsFunc() => shopliftRobbery(Shirt, Pants);
+                                interactable.onInteractEnd.AddListener((UnityAction)funcThatCallsFunc);
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
             }
         }
     }
+
+    public void shopliftRobbery(bool Shirt, bool Pants)
+    {
+        if (Singleton<Registry>.Instance == null) return;
+        List<ClothingDefinition> clothingDefinitionList = new List<ClothingDefinition>();
+        foreach (Il2CppSystem.Collections.Generic.KeyValuePair<int, Registry.ItemRegister> keyValuePair in Singleton<Registry>.Instance.ItemDictionary) {
+            if (keyValuePair.value != null && keyValuePair.value.Definition != null &&
+                keyValuePair.value.Definition.Category == (EItemCategory.Clothing))
+            {
+                int hash = Registry.GetHash(keyValuePair.value.Definition.ID);
+                if (Singleton<Registry>.Instance.ItemDictionary.ContainsKey(hash))
+                {
+                    Registry.ItemRegister itemRegister = Singleton<Registry>.Instance.ItemDictionary[hash];
+                    if (itemRegister != null && itemRegister.Definition != null)
+                    {
+                        ClothingDefinition clothingDefinition =
+                            ((Il2CppObjectBase)itemRegister.Definition).Cast<ClothingDefinition>();
+                        if (clothingDefinition != null && (Shirt && clothingDefinition.Slot == EClothingSlot.Top ||
+                                                           Pants && clothingDefinition.Slot == EClothingSlot.Bottom))
+                        {
+                            clothingDefinitionList.Add(clothingDefinition);
+                        }
+                    }
+                }
+            }
+        }
+
+        ClothingInstance clothingInstance =
+            ((Il2CppObjectBase)((ItemDefinition)clothingDefinitionList[
+                UnityEngine.Random.Range(0, clothingDefinitionList.Count - 1)]).GetDefaultInstance(1))
+            .Cast<ClothingInstance>();
+        if (clothingInstance == null) return;
+        bool flag = false;
+        foreach (HotbarSlot hotbarSlot in PlayerSingleton<PlayerInventory>.Instance.hotbarSlots)
+        {
+            if (((ItemSlot)hotbarSlot).GetCapacityForItem((ItemInstance)clothingInstance) != 0)
+            {
+                ClothingInstance clothingInstance2 = ((Il2CppObjectBase)((ItemInstance)clothingInstance).GetCopy(1))
+                    .Cast<ClothingInstance>();
+                EClothingColor colour = AllColors[UnityEngine.Random.Range(0, AllColors.Count)];
+                clothingInstance2.Color = colour;
+                ((ItemSlot) hotbarSlot).AddItem((ItemInstance) clothingInstance2, false);
+                using (IEnumerator<NPC> enumerator =
+                       Object.FindObjectsOfType<NPC>().GetEnumerator())
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        NPC current = enumerator.Current;
+                        if (current != null && current.IsConscious && current.awareness &&
+                            current.awareness.VisionCone &&
+                            current.awareness.VisionCone.sightedPlayers.Contains(Player.Local) &&
+                            current.actions != null)
+                        {
+                            current.actions.SetCallPoliceBehaviourCrime((Crime) new Shoplifting());
+                            current.actions.CallPolice_Networked(Player.Local);
+                            if (current.VoiceOverEmitter != null)
+                            {
+                                current.VoiceOverEmitter.Play(EVOLineType.Alerted);
+                            }
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    private static readonly List<EClothingColor> AllColors = new List<EClothingColor>
+    {
+        EClothingColor.White,
+        EClothingColor.LightGrey,
+        EClothingColor.DarkGrey,
+        EClothingColor.Charcoal,
+        EClothingColor.Black,
+        EClothingColor.LightRed,
+        EClothingColor.Red,
+        EClothingColor.Crimson,
+        EClothingColor.Orange,
+        EClothingColor.Tan,
+        EClothingColor.Brown,
+        EClothingColor.Coral,
+        EClothingColor.Beige,
+        EClothingColor.Yellow,
+        EClothingColor.Lime,
+        EClothingColor.LightGreen,
+        EClothingColor.DarkGreen,
+        EClothingColor.Cyan,
+        EClothingColor.SkyBlue,
+        EClothingColor.Blue,
+        EClothingColor.DeepBlue,
+        EClothingColor.Navy,
+        EClothingColor.DeepPurple,
+        EClothingColor.Purple,
+        EClothingColor.Magenta,
+        EClothingColor.BrightPink,
+        EClothingColor.HotPink
+    };
 
     [HarmonyPatch(typeof(NPCResponses_Civilian), "RespondToAimedAt", new Type[] { typeof(Player) })]
     static class RobberyPatch
@@ -200,7 +332,7 @@ namespace Section97
                         break;
                     }
 
-                    npc.VoiceOverEmitter.Play((EVOLineType)12);
+                    npc.VoiceOverEmitter.Play(EVOLineType.Scared);
                     break;
                 }
             }

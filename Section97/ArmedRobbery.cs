@@ -4,9 +4,9 @@ namespace Section97.Crimes
 {
     public class ArmedRobbery : Crime
     {
-        public virtual string CrimeName
+        public override string CrimeName
         {
-            get => "Armed Robbery";
+            get => nameof(ArmedRobbery);
             set => base.CrimeName = value;
         }
     }

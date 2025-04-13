@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\CRIBG\\source\\repos\\Section97\\Section97\\Section97.csproj",
+      "projectUniqueName": "C:\\Users\\CRIBG\\source\\repos\\AssailentDev\\Section97\\Section97\\Section97.csproj",
       "projectName": "Section97",
-      "projectPath": "C:\\Users\\CRIBG\\source\\repos\\Section97\\Section97\\Section97.csproj",
+      "projectPath": "C:\\Users\\CRIBG\\source\\repos\\AssailentDev\\Section97\\Section97\\Section97.csproj",
       "packagesPath": "C:\\Users\\CRIBG\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\CRIBG\\source\\repos\\Section97\\Section97\\obj\\",
+      "outputPath": "C:\\Users\\CRIBG\\source\\repos\\AssailentDev\\Section97\\Section97\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
