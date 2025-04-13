@@ -5,10 +5,6 @@ using Il2CppScheduleOne.PlayerScripts;
 using Il2CppScheduleOne.NPCs;
 using Il2CppScheduleOne.Interaction;
 using MelonLoader.Preferences;
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppScheduleOne;
 using Il2CppScheduleOne.Clothing;
@@ -18,20 +14,14 @@ using Il2CppScheduleOne.ItemFramework;
 using Il2CppScheduleOne.Law;
 using Il2CppScheduleOne.Money;
 using Il2CppScheduleOne.VoiceOver;
-using Il2CppSystem.Runtime.CompilerServices;
+using Il2CppVLB;
 using Section97.Crimes;
 using UnityEngine;
 using UnityEngine.Events;
 using Object = UnityEngine.Object;
-using Random = System.Random;
-using Il2CppScheduleOne.TV;
-using Il2CppSystem;
-using Action = Il2CppSystem.Action;
-using Array = Il2CppSystem.Array;
-using Console = Il2CppScheduleOne.Console;
-using Enum = Il2CppSystem.Enum;
+using BindingFlags = System.Reflection.BindingFlags;
 using Exception = System.Exception;
-using KeyValuePair = Il2CppSystem.Collections.Generic.KeyValuePair;
+using FieldInfo = System.Reflection.FieldInfo;
 using TimeSpan = System.TimeSpan;
 using Type = System.Type;
 
@@ -40,8 +30,14 @@ namespace Section97
     public class Sec97 : MelonMod
 
     {
+        public static List<GameObject> robbableDisplayBenches = new List<GameObject>();
+        public static List<GameObject> displayBench0Items = new List<GameObject>();
+        public static List<GameObject> displayBench1Items = new List<GameObject>();
+        public static List<GameObject> displayBench2Items = new List<GameObject>();
+        public static bool canRobPawnShopBench0 = true;
+        public static bool canRobPawnShopBench1 = true;
+        public static bool canRobPawnShopBench2 = true;
     public static List<GameObject> robbableRegisters = new List<GameObject>();
-    public static List<GameObject> stolenItems = new List<GameObject>();
 
     private MelonPreferences_Category preferenceCategory = (MelonPreferences_Category)null;
     private MelonPreferences_Entry<int> minimumMoney = (MelonPreferences_Entry<int>)null;
@@ -68,6 +64,12 @@ namespace Section97
             "Minimum Money From TacoTicklers Robbery", "The minimum amount of $$$ you can get per TacoTicklers Robbery");
         preferenceCategory.CreateEntry<int>("TacoTicklers_maximum_robbery_money", 600,
             "Maximum Money From TacoTicklers Robbery", "The maximum amount of $$$ you can get per TacoTicklers Robbery");
+        preferenceCategory.CreateEntry<int>("PawnStore_SmashNGrab_minimum_robbery_money", 200,
+            "Minimum Money from the Pawn Store smash n grab.",
+            "The minimum amount of $$$ from the Pawn Store Smash N Grab (Baseball bat robbery)");
+        preferenceCategory.CreateEntry<int>("PawnStore_SmashNGrab_maximum_robbery_money", 600,
+            "Maximum Money from the Pawn Store smash n grab.",
+            "The maximum amount of $$$ from the Pawn Store Smash N Grab (Baseball bat robbery)");
         }
 
     public override void OnDeinitializeMelon()
@@ -84,41 +86,78 @@ namespace Section97
     public override void OnSceneWasLoaded(int buildIndex, string sceneName)
     {
         if (!(sceneName == "Main")) return;
-        foreach (GameObject gameObject in Object.FindObjectsOfType<GameObject>())
-        {
-            if (gameObject.name == "cash register")
+            foreach (GameObject gameObject in Object.FindObjectsOfType<GameObject>())
             {
-                Sec97.robbableRegisters.Add(gameObject);
-            } else if (gameObject.name.ToLower().Contains("clothing rack"))
-            {
-                try
+                if (gameObject.name == "cash register")
                 {
-                    bool Shirt = gameObject.name.EndsWith("shirts");
-                    bool Pants = gameObject.name.EndsWith("pants");
-                    if (Shirt || Pants)
+                    Sec97.robbableRegisters.Add(gameObject);
+                } else if (gameObject.name.ToLower().Contains("clothing rack"))
+                {
+                    try
                     {
-                        Transform child = gameObject.transform.FindChild("clothing rack");
-                        if (child != null)
+                        bool Shirt = gameObject.name.EndsWith("shirts");
+                        bool Pants = gameObject.name.EndsWith("pants");
+                        if (Shirt || Pants)
                         {
-                            Transform child1 = child.FindChild("Rack");
-                            if (child1 != null)
+                            Transform child = gameObject.transform.FindChild("clothing rack");
+                            if (child != null)
                             {
-                                InteractableObject interactable =
-                                    child1.gameObject.AddComponent<InteractableObject>();
-                                interactable.message = Shirt ? "Shoplift Shirt" : "Shoplift Pants";
-                                interactable.MaxInteractionRange = 2.5f;
-                                void funcThatCallsFunc() => shopliftRobbery(Shirt, Pants);
-                                interactable.onInteractEnd.AddListener((UnityAction)funcThatCallsFunc);
+                                Transform child1 = child.FindChild("Rack");
+                                if (child1 != null)
+                                {
+                                    InteractableObject interactable =
+                                        child1.gameObject.AddComponent<InteractableObject>();
+                                    interactable.message = Shirt ? "Shoplift Shirt" : "Shoplift Pants";
+                                    interactable.MaxInteractionRange = 2.5f;
+                                    void funcThatCallsFunc() => shopliftRobbery(Shirt, Pants);
+                                    interactable.onInteractEnd.AddListener((UnityAction)funcThatCallsFunc);
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception e)
+                    catch (Exception e)
+                    {
+                        continue;
+                    }
+                } else if (gameObject.name.Contains("Display Bench"))
                 {
-                    continue;
+                    robbableDisplayBenches.Add(gameObject);
+                    if (gameObject.name.Contains("(2)")) // From Display Bench (2)
+                    {
+                        // Display Bench 2
+                        displayBench2Items.Add(gameObject.transform.FindChild("Square tub").gameObject);
+                        displayBench2Items.Add(gameObject.transform.FindChild("Square tub (1)").gameObject);
+                        displayBench2Items.Add(gameObject.transform.parent.FindChild("Saucepan").gameObject);
+                        displayBench2Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Champagne Bottle").gameObject);
+                        // Display Bench 1
+                        displayBench1Items.Add(gameObject.transform.FindChild("Gold bar").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("Gold bar (1)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("Gold bar (2)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("Gold bar (3)").gameObject);
+                    } else if (gameObject.name == "Display Bench") // From Display Bench
+                    {
+                        // Display Bench 1
+                        displayBench1Items.Add(gameObject.transform.FindChild("Flashlight").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (1)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (2)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (3)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (4)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (5)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (6)").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("Funnel").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("SmallBox").gameObject);
+                        displayBench1Items.Add(gameObject.transform.FindChild("SmallBox (1)").gameObject);
+                        // Display Bench
+                        displayBench0Items.Add(gameObject.transform.FindChild("Mortar").gameObject);
+                        displayBench0Items.Add(gameObject.transform.FindChild("Frying Pan").gameObject);
+                        displayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Digital Alarm").gameObject);
+                        displayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Wall Clock").gameObject);
+                        displayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Biohazard Box").gameObject);
+
+                    }
                 }
             }
-        }
     }
 
     public void shopliftRobbery(bool Shirt, bool Pants)
@@ -219,13 +258,167 @@ namespace Section97
         EClothingColor.HotPink
     };
 
-    [HarmonyPatch(typeof(NPCResponses_Civilian), "RespondToAimedAt", new Type[] { typeof(Player) })]
+        [HarmonyPatch(typeof(HotbarSlot), "Unequip")] 
+        static class PawnstoreRobberyUnequipPatch
+        {
+            public static bool Prefix(ref HotbarSlot __instance)
+            {
+                try
+                {
+                    if (__instance.ItemInstance.GetItemData().ID == "baseballbat")
+                    {
+                        foreach (GameObject gameObject in robbableDisplayBenches)
+                        {
+                            InteractableObject interactable;
+                            if (gameObject.GetComponent<InteractableObject>() != null)
+                            {
+                                interactable = gameObject.GetComponent<InteractableObject>();
+                                interactable.enabled = false;
+                            }
+                        }
+                    }
+                }
+                catch (Exception E)
+                {
+                }
+
+                return true;
+            }
+        }
+        
+        [HarmonyPatch(typeof(HotbarSlot), "Equip")]
+    static class PawnstoreRobberyPatch
+    {
+        public static bool Prefix(ref HotbarSlot __instance)
+        {
+            try
+            {
+                if (!(__instance.ItemInstance.GetItemData().ID == "baseballbat")) return true;
+
+                foreach (GameObject gameObject in robbableDisplayBenches)
+                {
+                    if (gameObject.name == "Display Bench" && !canRobPawnShopBench0)
+                    {
+                        return true;
+                    }
+                    else if (gameObject.name == "Display Bench (1)" && !canRobPawnShopBench1)
+                    {
+                        return true;
+                    }
+                    else if (gameObject.name == "Display Bench (2)" && !canRobPawnShopBench2)
+                    {
+                        return true;
+                    }
+
+                    InteractableObject interactable;
+                    if (gameObject.GetComponent<InteractableObject>() != null)
+                    {
+                        interactable = gameObject.GetComponent<InteractableObject>();
+                        interactable.enabled = true;
+                    }
+                    else
+                    {
+                        interactable = gameObject.AddComponent<InteractableObject>();
+                        interactable.message = "Smash";
+                        interactable.MaxInteractionRange = 4f;
+                        interactable.Priority = 10;
+                        Transform position = interactable.transform;
+                        position.position += position.up * 1.2f;
+                        interactable.displayLocationPoint = position;
+                        HotbarSlot slot = __instance;
+                            void funcThatCallsFunc() => startSmashin(gameObject, slot);
+                        interactable.onInteractEnd.AddListener((UnityAction)funcThatCallsFunc);
+                    }
+                }
+            }
+            catch (Exception E)
+            {
+                MelonLogger.Warning(E.StackTrace);
+            }
+
+            return true;
+            }
+
+            static async void startSmashin(GameObject gameObject, HotbarSlot slot)
+            {
+                PlayerSingleton<PlayerInventory>.Instance.equippedSlot.Equippable.Cast<Equippable_MeleeWeapon>().Release();
+                InteractableObject interactable = gameObject.GetComponent<InteractableObject>();
+                interactable.enabled = false;
+                List<GameObject> benchItems = new List<GameObject>();
+                if (gameObject.name == "Display Bench") { benchItems = displayBench0Items; canRobPawnShopBench0 = false; }
+                else if (gameObject.name == "Display Bench (1)") { benchItems = displayBench1Items; canRobPawnShopBench1 = false; }
+                else if (gameObject.name == "Display Bench (2)") { benchItems = displayBench2Items; canRobPawnShopBench2 = false; }
+                // Disables Items
+                foreach (GameObject item in benchItems)
+                {
+                    item.active = false;
+                }
+                // Disables The Thing Mibob
+                int robMoney = UnityEngine.Random.Range(
+                    MelonPreferences.GetEntryValue<int>("Section97", "PawnStore_SmashNGrab_minimum_robbery_money"),
+                    MelonPreferences.GetEntryValue<int>("Section97", "PawnStore_SmashNGrab_maximum_robbery_money"));
+                Type typeFromHandle = typeof(MoneyManager);
+                FieldInfo? field = typeFromHandle.GetField("Instance", BindingFlags.Static | BindingFlags.Public);
+                bool flag2 = field != null;
+                if (flag2)
+                {
+                    MoneyManager moneyManager = (MoneyManager)field.GetValue(null);
+                    bool flag3 = moneyManager != null;
+                    if (flag3)
+                    {
+                        moneyManager.ChangeCashBalance(robMoney, true, true);
+                    }
+                }
+                else
+                {
+                    MoneyManager moneyManager = Object.FindObjectOfType<MoneyManager>();
+                    bool flag3 = moneyManager != null;
+                    if (flag3)
+                        moneyManager.ChangeCashBalance(robMoney, true, true);
+                }
+
+                foreach (NPC npc in Object.FindObjectsOfType<NPC>())
+                {
+                    if (npc != null && npc.IsConscious && npc.awareness && npc.awareness.VisionCone &&
+                        npc.awareness.VisionCone.sightedPlayers != null &&
+                        npc.awareness.VisionCone.sightedPlayers.Contains(Player.Local) && npc.dialogueHandler != null &&
+                        npc.actions != null)
+                    {
+                        npc.actions.SetCallPoliceBehaviourCrime((Crime)new SmashNGrab());
+                        npc.actions.CallPolice_Networked(Player.Local);
+                        npc.SetPanicked();
+                        npc.dialogueHandler.PlayReaction("panic_start", 5f, true);
+                        if (npc.VoiceOverEmitter != null)
+                        {
+                            break;
+                        }
+
+                        npc.VoiceOverEmitter.Play(EVOLineType.Scared);
+                        break;
+                    }
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(5));
+
+                if (gameObject.name == "Display Bench") { canRobPawnShopBench0 = true; }
+                else if (gameObject.name == "Display Bench (1)") { canRobPawnShopBench1 = true; }
+                else if (gameObject.name == "Display Bench (2)") { canRobPawnShopBench2 = true; }
+
+                foreach (GameObject item in benchItems)
+                {
+                    item.active = true;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(NPCResponses_Civilian), "RespondToAimedAt", new Type[] { typeof(Player) })]
     static class RobberyPatch
     {
         public static bool Prefix(ref NPCResponses_Civilian __instance, ref Player __0)
         {
             try
             {
+
                 NPCScheduleManager npcsm = __instance.gameObject.transform.parent.Find("Schedule")
                     .GetComponent<NPCScheduleManager>();
                 if ((npcsm.ActiveAction.name.Contains("Gas mart") || npcsm.ActiveAction.name.Contains("Gas station")) &&
@@ -259,6 +452,12 @@ namespace Section97
                     return false;
                 }
 
+                if (npcsm.gameObject.transform.parent.name.Contains("S"))
+                {
+                    __instance.actions.Cower();
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception e)
@@ -284,9 +483,6 @@ namespace Section97
                 if (((ItemSlot)equippedSlot).ItemInstance.Equippable.TryCast<Equippable_RangedWeapon>())
                     flag = ((ItemSlot)equippedSlot).ItemInstance.Equippable.Cast<Equippable_RangedWeapon>();
             }
-            Console.ChangeCashCommand changeCashCommand = new Console.ChangeCashCommand();
-            Il2CppSystem.Collections.Generic.List<string> List1 =
-            new Il2CppSystem.Collections.Generic.List<string>();
             int robMoney = 0;
             if (x == 0) // Gas Marts
             {
@@ -295,9 +491,9 @@ namespace Section97
                     MelonPreferences.GetEntryValue<int>("Section97", "GasMart_maximum_robbery_money"));
             } else if (x == 1)
             {
-                robMoney = (int)UnityEngine.Random.Range(
-                MelonPreferences.GetEntryValue<int>("Section97", "PawnStore_minimum_robbery_money"),
-                MelonPreferences.GetEntryValue<int>("Section97", "PawnStore_maximum_robbery_money"));
+                // robMoney = (int)UnityEngine.Random.Range(
+                // MelonPreferences.GetEntryValue<int>("Section97", "PawnStore_minimum_robbery_money"),
+                // MelonPreferences.GetEntryValue<int>("Section97", "PawnStore_maximum_robbery_money"));
             } else if (x == 2)
             {
                 robMoney = (int)UnityEngine.Random.Range(
@@ -310,11 +506,26 @@ namespace Section97
                     MelonPreferences.GetEntryValue<int>("Section97", "TacoTicklers_maximum_robbery_money"));
             }
 
-            List1.Add(robMoney.ToString()); 
-            MelonLogger.Msg(MelonPreferences.GetEntryValue<int>("Section97", "minimum_robbery_money")); 
-            MelonLogger.Msg(MelonPreferences.GetEntryValue<int>("Section97", "_robbery_money")); 
-            MelonLogger.Msg(robMoney); 
-            ((Console.ConsoleCommand) changeCashCommand).Execute(List1);
+            Type typeFromHandle = typeof(MoneyManager);
+            FieldInfo? field = typeFromHandle.GetField("Instance", BindingFlags.Static | BindingFlags.Public);
+            bool flag2 = field != null;
+            if (flag2)
+            {
+                MoneyManager moneyManager = (MoneyManager)field.GetValue(null);
+                bool flag3 = moneyManager != null;
+                if (flag3)
+                {
+                    moneyManager.ChangeCashBalance(robMoney, true, true);
+                }
+            }
+            else
+            {
+                MoneyManager moneyManager = Object.FindObjectOfType<MoneyManager>();
+                bool flag3 = moneyManager != null;
+                if (flag3)
+                    moneyManager.ChangeCashBalance(robMoney, true, true);
+            }
+
 
             foreach (NPC npc in Object.FindObjectsOfType<NPC>())
             {
@@ -359,12 +570,12 @@ namespace Section97
                 else
                 {
                     interactable = gameObject.AddComponent<InteractableObject>();
+                    interactable.message = "Rob";
+                    interactable.MaxInteractionRange = 15f;
+                    interactable.Priority = 10;
+                    void funcThatCallsFunc() => startRobbery(x);
+                    interactable.onInteractEnd.AddListener((UnityAction)funcThatCallsFunc);
                 }
-                interactable.message = "Rob";
-                interactable.MaxInteractionRange = 15f;
-                interactable.Priority = 10;
-                void funcThatCallsFunc() => startRobbery(x);
-                interactable.onInteractEnd.AddListener((UnityAction) funcThatCallsFunc);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(10));
