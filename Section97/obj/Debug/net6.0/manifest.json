@@ -1,0 +1,9 @@
+{
+    "name": "Section97",
+    "version_number": "1.0.0",
+    "website_url": "",
+    "description": "Section 97 is a mod that adds the ability to rob stores using handguns and revolvers! It has various different types of robberies planned for its road map. (Section 97 is the armed robbery penal code in Australia)",
+    "dependencies": [
+        "LavaGang-MelonLoader-0.7.0"
+    ]
+}
