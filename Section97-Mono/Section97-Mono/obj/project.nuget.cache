@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Y+kt4LriDHY=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\CRIBG\\source\\repos\\AssailentDev\\Section97\\Section97-Mono\\Section97-Mono\\Section97-Mono.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\CRIBG\\.nuget\\packages\\bepinex.assemblypublicizer.msbuild\\0.5.0-beta.1\\bepinex.assemblypublicizer.msbuild.0.5.0-beta.1.nupkg.sha512",
+    "C:\\Users\\CRIBG\\.nuget\\packages\\unityengine.modules\\2022.3.32\\unityengine.modules.2022.3.32.nupkg.sha512"
+  ],
+  "logs": []
+}

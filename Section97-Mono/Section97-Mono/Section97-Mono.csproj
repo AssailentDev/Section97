@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net462</TargetFramework>
+        <TargetFrameworkVersion>net462</TargetFrameworkVersion>
+        <ImplicitUsings>true</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <NoWarn>8618;MSB3026</NoWarn>
+        <RestoreAdditionalProjectSources>
+            https://api.nuget.org/v3/index.json;
+            https://nuget.bepinex.dev/v3/index.json;
+            https://nuget.samboy.dev/v3/index.json
+        </RestoreAdditionalProjectSources>
+        <Configurations>Debug;Release;FishNetGen</Configurations>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\Schedule I\\Schedule I_Data\Managed\*.dll" Exclude="C:\Program Files (x86)\Steam\steamapps\common\Schedule I\\Schedule I_Data\Managed\System*.dll;C:\Program Files (x86)\Steam\steamapps\common\Schedule I\\Schedule I_Data\Managed\Unity*.dll;" Private="false" Publicize="True" />
+        <Reference Include="0Harmony">
+          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Schedule I\MelonLoader\net6\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="MelonLoader">
+          <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Schedule I\MelonLoader\net6\MelonLoader.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <!-- Use BepInEx's Assembly Publicizer to tell IDEs and the compiler that every field, method, etc. is public, in the game assemblies -->
+    <ItemGroup>
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.5.0-beta.1">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="UnityEngine.Modules" Version="2022.3.32" PrivateAssets="all" />
+    </ItemGroup>
+    
+    <Target Name="CopyOutputFileToGame" AfterTargets="Build">
+<!--        <Exec Command="&quot;$(MSBuildProjectDirectory)\Tools\FishNet.CodeGenerator.Cli.exe&quot; -i &quot;$(OutputPath)\$(AssemblyName).dll&quot; -a @(DepFolders->'&quot;%(Identity)&quot;', ' ')" Condition="'$(Configuration)' == 'FishNetGen'"/>-->
+        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Schedule I\mods\" Retries="60"/>
+<!--        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(UnityOutDir)" Retries="60"/>-->
+    </Target>   
+
+</Project>

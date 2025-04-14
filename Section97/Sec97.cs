@@ -30,61 +30,61 @@ namespace Section97
     public class Sec97 : MelonMod
 
     {
-        public static List<GameObject> robbableDisplayBenches = new List<GameObject>();
-        public static List<GameObject> displayBench0Items = new List<GameObject>();
-        public static List<GameObject> displayBench1Items = new List<GameObject>();
-        public static List<GameObject> displayBench2Items = new List<GameObject>();
-        public static bool canRobPawnShopBench0 = true;
-        public static bool canRobPawnShopBench1 = true;
-        public static bool canRobPawnShopBench2 = true;
-        public static List<GameObject> robbableRegisters = new List<GameObject>();
+        public static List<GameObject> RobbableDisplayBenches = new List<GameObject>();
+        public static List<GameObject> DisplayBench0Items = new List<GameObject>();
+        public static List<GameObject> DisplayBench1Items = new List<GameObject>();
+        public static List<GameObject> DisplayBench2Items = new List<GameObject>();
+        public static bool CanRobPawnShopBench0 = true;
+        public static bool CanRobPawnShopBench1 = true;
+        public static bool CanRobPawnShopBench2 = true;
+        public static List<GameObject> RobbableRegisters = new List<GameObject>();
 
-        private MelonPreferences_Category preferenceCategory = (MelonPreferences_Category)null;
+        private MelonPreferences_Category _preferenceCategory = (MelonPreferences_Category)null;
 
         public override void OnInitializeMelon()
         {
-            this.preferenceCategory = MelonPreferences.CreateCategory("Section97");
-            preferenceCategory.CreateEntry<int>("GasMart_minimum_robbery_money", 300,
+            _preferenceCategory = MelonPreferences.CreateCategory("Section97");
+            _preferenceCategory.CreateEntry("GasMart_minimum_robbery_money", 300,
                 "Minimum Money From Robbery",
                 "The minimum amount of $$$ you can get per gas mart robbery");
-            preferenceCategory.CreateEntry<int>("GasMart_maximum_robbery_money", 700,
+            _preferenceCategory.CreateEntry("GasMart_maximum_robbery_money", 700,
                 "Maximum Money From Robbery",
                 "The maximum amount of $$$ you can get per gas mart robbery");
-            preferenceCategory.CreateEntry<int>("PawnStore_minimum_robbery_money", 500,
+            _preferenceCategory.CreateEntry("PawnStore_minimum_robbery_money", 500,
                 "Minimum Money From Pawn Store Robbery", 
                 "The minimum amount of $$$ you can get per Pawn Store Robbery");
-            preferenceCategory.CreateEntry<int>("PawnStore_maximum_robbery_money", 1200,
+            _preferenceCategory.CreateEntry("PawnStore_maximum_robbery_money", 1200,
                 "Maximum Money From Pawn Store Robbery", 
                 "The maximum amount of $$$ you can get per Pawn Store Robbery");
-            preferenceCategory.CreateEntry<int>("Casino_minimum_robbery_money", 700,
+            _preferenceCategory.CreateEntry("Casino_minimum_robbery_money", 700,
                 "Minimum Money From Casino Robbery", 
                 "The minimum amount of $$$ you can get per Casino Robbery");
-            preferenceCategory.CreateEntry<int>("Casino_maximum_robbery_money", 1500,
+            _preferenceCategory.CreateEntry("Casino_maximum_robbery_money", 1500,
                 "Maximum Money From Casino Robbery", 
                 "The maximum amount of $$$ you can get per Casino Robbery");
-            preferenceCategory.CreateEntry<int>("TacoTicklers_minimum_robbery_money", 300,
+            _preferenceCategory.CreateEntry("TacoTicklers_minimum_robbery_money", 300,
                 "Minimum Money From TacoTicklers Robbery", 
                 "The minimum amount of $$$ you can get per TacoTicklers Robbery");
-            preferenceCategory.CreateEntry<int>("TacoTicklers_maximum_robbery_money", 600,
+            _preferenceCategory.CreateEntry("TacoTicklers_maximum_robbery_money", 600,
                 "Maximum Money From TacoTicklers Robbery", 
                 "The maximum amount of $$$ you can get per TacoTicklers Robbery");
-            preferenceCategory.CreateEntry<int>("PawnStore_SmashNGrab_minimum_robbery_money", 200,
+            _preferenceCategory.CreateEntry("PawnStore_SmashNGrab_minimum_robbery_money", 200,
                 "Minimum Money from the Pawn Store smash n grab.",
                 "The minimum amount of $$$ from the Pawn Store Smash N Grab (Baseball bat robbery)");
-            preferenceCategory.CreateEntry<int>("PawnStore_SmashNGrab_maximum_robbery_money", 600,
+            _preferenceCategory.CreateEntry("PawnStore_SmashNGrab_maximum_robbery_money", 600,
                 "Maximum Money from the Pawn Store smash n grab.",
                 "The maximum amount of $$$ from the Pawn Store Smash N Grab (Baseball bat robbery)");
             }
 
         public override void OnDeinitializeMelon()
         {
-            this.preferenceCategory.SaveToFile();
+            _preferenceCategory.SaveToFile();
         }
 
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
             if (!(sceneName == "Main")) return;
-            Sec97.robbableRegisters.Clear();
+            Sec97.RobbableRegisters.Clear();
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -94,7 +94,7 @@ namespace Section97
                 {
                     if (gameObject.name == "cash register")
                     {
-                        Sec97.robbableRegisters.Add(gameObject);
+                        Sec97.RobbableRegisters.Add(gameObject);
                     } else if (gameObject.name.ToLower().Contains("clothing rack"))
                     {
                         try
@@ -125,40 +125,39 @@ namespace Section97
                         }
                     } else if (gameObject.name.Contains("Display Bench"))
                     {
-                        robbableDisplayBenches.Add(gameObject);
+                        RobbableDisplayBenches.Add(gameObject);
                         if (gameObject.name.Contains("(2)")) // From Display Bench (2)
                         {
                             // Display Bench 2
-                            displayBench2Items.Add(gameObject.transform.FindChild("Square tub").gameObject);
-                            displayBench2Items.Add(gameObject.transform.FindChild("Square tub (1)").gameObject);
-                            displayBench2Items.Add(gameObject.transform.parent.FindChild("Saucepan").gameObject);
-                            displayBench2Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Champagne Bottle").gameObject);
+                            DisplayBench2Items.Add(gameObject.transform.FindChild("Square tub").gameObject);
+                            DisplayBench2Items.Add(gameObject.transform.FindChild("Square tub (1)").gameObject);
+                            DisplayBench2Items.Add(gameObject.transform.parent.FindChild("Saucepan").gameObject);
+                            DisplayBench2Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Champagne Bottle").gameObject);
                             // Display Bench 1
-                            displayBench1Items.Add(gameObject.transform.FindChild("Gold bar").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("Gold bar (1)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("Gold bar (2)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("Gold bar (3)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("Gold bar").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("Gold bar (1)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("Gold bar (2)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("Gold bar (3)").gameObject);
                         } else if (gameObject.name == "Display Bench") // From Display Bench
                         {
                             // Display Bench 1
-                            displayBench1Items.Add(gameObject.transform.FindChild("Flashlight").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (1)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (2)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (3)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (4)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (5)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (6)").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("Funnel").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("SmallBox").gameObject);
-                            displayBench1Items.Add(gameObject.transform.FindChild("SmallBox (1)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("Flashlight").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (1)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (2)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (3)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (4)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (5)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("45 Bullet (6)").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("Funnel").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("SmallBox").gameObject);
+                            DisplayBench1Items.Add(gameObject.transform.FindChild("SmallBox (1)").gameObject);
                             // Display Bench
-                            displayBench0Items.Add(gameObject.transform.FindChild("Mortar").gameObject);
-                            displayBench0Items.Add(gameObject.transform.FindChild("Frying Pan").gameObject);
-                            displayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Digital Alarm").gameObject);
-                            displayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Wall Clock").gameObject);
-                            displayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Biohazard Box").gameObject);
-
+                            DisplayBench0Items.Add(gameObject.transform.FindChild("Mortar").gameObject);
+                            DisplayBench0Items.Add(gameObject.transform.FindChild("Frying Pan").gameObject);
+                            DisplayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Digital Alarm").gameObject);
+                            DisplayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Wall Clock").gameObject);
+                            DisplayBench0Items.Add(gameObject.transform.parent.FindChild("Display cabinet (2)").FindChild("Biohazard Box").gameObject);
                         }
                     }
                 }
@@ -271,7 +270,7 @@ namespace Section97
                     {
                         if (__instance.ItemInstance.GetItemData().ID == "baseballbat")
                         {
-                            foreach (GameObject gameObject in robbableDisplayBenches)
+                            foreach (GameObject gameObject in RobbableDisplayBenches)
                             {
                                 InteractableObject interactable;
                                 if (gameObject.GetComponent<InteractableObject>() != null)
@@ -299,17 +298,17 @@ namespace Section97
                 {
                     if (!(__instance.ItemInstance.GetItemData().ID == "baseballbat")) return true;
 
-                    foreach (GameObject gameObject in robbableDisplayBenches)
+                    foreach (GameObject gameObject in RobbableDisplayBenches)
                     {
-                        if (gameObject.name == "Display Bench" && !canRobPawnShopBench0)
+                        if (gameObject.name == "Display Bench" && !CanRobPawnShopBench0)
                         {
                             return true;
                         }
-                        else if (gameObject.name == "Display Bench (1)" && !canRobPawnShopBench1)
+                        else if (gameObject.name == "Display Bench (1)" && !CanRobPawnShopBench1)
                         {
                             return true;
                         }
-                        else if (gameObject.name == "Display Bench (2)" && !canRobPawnShopBench2)
+                        else if (gameObject.name == "Display Bench (2)" && !CanRobPawnShopBench2)
                         {
                             return true;
                         }
@@ -349,9 +348,9 @@ namespace Section97
                     InteractableObject interactable = gameObject.GetComponent<InteractableObject>();
                     interactable.enabled = false;
                     List<GameObject> benchItems = new List<GameObject>();
-                    if (gameObject.name == "Display Bench") { benchItems = displayBench0Items; canRobPawnShopBench0 = false; }
-                    else if (gameObject.name == "Display Bench (1)") { benchItems = displayBench1Items; canRobPawnShopBench1 = false; }
-                    else if (gameObject.name == "Display Bench (2)") { benchItems = displayBench2Items; canRobPawnShopBench2 = false; }
+                    if (gameObject.name == "Display Bench") { benchItems = DisplayBench0Items; CanRobPawnShopBench0 = false; }
+                    else if (gameObject.name == "Display Bench (1)") { benchItems = DisplayBench1Items; CanRobPawnShopBench1 = false; }
+                    else if (gameObject.name == "Display Bench (2)") { benchItems = DisplayBench2Items; CanRobPawnShopBench2 = false; }
                     // Disables Items
                     foreach (GameObject item in benchItems)
                     {
@@ -404,9 +403,9 @@ namespace Section97
 
                     await Task.Delay(TimeSpan.FromMinutes(5));
 
-                    if (gameObject.name == "Display Bench") { canRobPawnShopBench0 = true; }
-                    else if (gameObject.name == "Display Bench (1)") { canRobPawnShopBench1 = true; }
-                    else if (gameObject.name == "Display Bench (2)") { canRobPawnShopBench2 = true; }
+                    if (gameObject.name == "Display Bench") { CanRobPawnShopBench0 = true; }
+                    else if (gameObject.name == "Display Bench (1)") { CanRobPawnShopBench1 = true; }
+                    else if (gameObject.name == "Display Bench (2)") { CanRobPawnShopBench2 = true; }
 
                     foreach (GameObject item in benchItems)
                     {
@@ -552,7 +551,7 @@ namespace Section97
                     }
                 }
 
-                foreach (GameObject gameObject in robbableRegisters)
+                foreach (GameObject gameObject in RobbableRegisters)
                 {
                     InteractableObject interactable = gameObject.GetComponent<InteractableObject>();
                     interactable.enabled = false;
@@ -563,7 +562,7 @@ namespace Section97
 
             public static async void startRobberyRegisters(int x)
             {
-                foreach (GameObject gameObject in robbableRegisters)
+                foreach (GameObject gameObject in RobbableRegisters)
                 {
                     InteractableObject interactable;
                     if (gameObject.GetComponent<InteractableObject>() != null)
@@ -584,7 +583,7 @@ namespace Section97
 
                 await Task.Delay(TimeSpan.FromSeconds(10));
 
-                foreach (GameObject gameObject in robbableRegisters)
+                foreach (GameObject gameObject in RobbableRegisters)
                 {
                     InteractableObject interactable = gameObject.GetComponent<InteractableObject>();
                     interactable.enabled = false;
